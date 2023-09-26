@@ -250,7 +250,7 @@ def get_statistics_keyboard() -> InlineKeyboardMarkup:
     Вывод клаиватуры меню статистики
     :return: Клавиатура меню статистики
     """
-    print('keyboards.py->get_statistics_keyboard', f'#{frameinfo.lineno}')
+    print('keyboards.py->get_statistics_keyboard', f'#{frameinfo.lineno}', 'Вывод клаиватуры меню статистики')
     statistics_keyboard = InlineKeyboardMarkup(row_width=2)
     default = InlineKeyboardButton('Статистика доходов', callback_data='income_statistics')
     categories = InlineKeyboardButton('Статистика расходов', callback_data='expense_statistics')
@@ -266,7 +266,7 @@ def get_statistics_keyboard_types() -> InlineKeyboardMarkup:
     Вывод клаиватуры статистики с типами
     :return: Клавиатура меню статистики
     """
-    print('keyboards.py->get_statistics_keyboard_types', f'#{frameinfo.lineno}')
+    print('keyboards.py->get_statistics_keyboard_types', f'#{frameinfo.lineno}', 'Вывод клаиватуры статистики с типами')
     statistics_keyboard = InlineKeyboardMarkup(row_width=2)
     default = InlineKeyboardButton('Общая статистика', callback_data='default_statistics')
     categories = InlineKeyboardButton('По категориям', callback_data='categories_statistics')
@@ -283,7 +283,7 @@ def get_statistics_period_keyboard(positions_type: str) -> InlineKeyboardMarkup:
     :param positions_type: Тип позиций для показа статисики
     :return: Клаиватура для выбора периода
     """
-    print('keyboards.py->get_statistics_period_keyboard', f'#{frameinfo.lineno}')
+    print('keyboards.py->get_statistics_period_keyboard', f'#{frameinfo.lineno}', 'Вывод клавиатуры периода показа статистики')
     period_keyboard = InlineKeyboardMarkup(row_width=2)
     all_time = InlineKeyboardButton('За всё время', callback_data='all_time')
     month = InlineKeyboardButton('За месяц', callback_data='month')

@@ -83,24 +83,26 @@ if not os.path.exists(BDPATH):
 
 
 def add_user(name: str, chat_id: str):
+    frameinfo = getframeinfo(currentframe())
     """
     Добавление нового пользователя в базу
     :param name: Имя пользователя
     :param chat_id: Уникальный id пользователя в telegram
     """
-    print('module.py->add_user', 'Добавление нового пользователя в базу')
+    print('module.py->add_user', f'#{frameinfo.lineno}', 'Добавление нового пользователя в базу')
     if not has_user(chat_id):
         session.add(Users(user_name=name, user_chat_id=chat_id))
         session.commit()
 
 
 def has_user(chat_id: str) -> bool:
+    frameinfo = getframeinfo(currentframe())
     """
     Проверка наличия пользователя в базе
     :param chat_id: Уникальный id пользователя в telegram
     :return: True или False в зависимости от того, найден ли пользователь с таким id
     """
-    print('module.py->has_user', 'Проверка наличия пользователя в базе')
+    print('module.py->has_user', f'#{frameinfo.lineno}', 'Проверка наличия пользователя в базе')
     is_exists = session.query(exists().where(Users.user_chat_id == chat_id)).scalar()
     return is_exists
 
@@ -112,19 +114,20 @@ def get_user_id(chat_id: str) -> int:
     :param chat_id: Уникальный id пользователя в telegram
     :return: id в базе данных
     """
-    print('module.py->get_user_id', f'{frameinfo.lineno}', 'Получение id в базе по id в telegram')
+    print('module.py->get_user_id', f'#{frameinfo.lineno}', 'Получение id в базе по id в telegram')
     user = session.query(Users).filter_by(user_chat_id=chat_id).one()
     return user.id
 
 
 def get_category_name(id: int, position_type: str) -> str:
+    frameinfo = getframeinfo(currentframe())
     """
     Получить название категории по id
     :param id: id категории в базе данных
     :param position_type: Тип категории
     :return: Наименование категории
     """
-    print('module.py->get_category_name', '#123', 'Получить название категории по id')
+    print('module.py->get_category_name', f'#{frameinfo.lineno}', 'Получить название категории по id')
     name = ''
     if position_type == 'income':
         name = session.query(IncomeCategories.name).filter(IncomeCategories.id == id).one()[0]
@@ -142,7 +145,7 @@ def get_categories(position_type: str) -> list:
     :param position_type: Тип категории
     :return: Список категорий
     """
-    print('module.py->get_categories', f'{frameinfo.lineno}', 'Получить список категорий по типу', f'{position_type}')
+    print('module.py->get_categories', f'#{frameinfo.lineno}', 'Получить список категорий по типу', f'{position_type}')
     categories = []
     if position_type == 'income':
         categories = list(session.query(IncomeCategories.name).all())
@@ -157,7 +160,7 @@ def del_position(name_cat):
     """
     Удаление категории
     """
-    print('module.py->del_position',f'{frameinfo.lineno}', 'Удаление выбранной категории')
+    print('module.py->del_position',f'#{frameinfo.lineno}', 'Удаление выбранной категории')
     i = session.query(ExpenseCategories).filter(ExpenseCategories.name == name_cat).one()
     session.delete(i)
     session.commit()
@@ -168,14 +171,16 @@ def add_position(position: Account):
     Добавить объект позиции в базу данных
     :param position: Объект строки с информацией о позиции
     """
-    print('module.py->add_position', '#156', f'{frameinfo.lineno}', 'Добавить объект позиции в базу данных')
+    print('module.py->add_position', f'#{frameinfo.lineno}', 'Добавить объект позиции в базу данных')
     session.add(position)
     session.commit()
 
 def add_row_table(name_cat):
+    frameinfo = getframeinfo(currentframe())
     '''
     Добавление новой категории в таблицу расходов
     '''
+    print('module.py->add_row_table', f'#{frameinfo.lineno}', 'Добавление новой категории в таблицу расходов')
     session.add(ExpenseCategories(name=name_cat, limit=1000))
     session.commit()
 
@@ -194,6 +199,7 @@ def edit_limit(type_cat, name_cat, new_limit):
         session.commit()
 
 def get_positions(chat_id, positions_type: str, month=None, year=None) -> (int, int):
+    frameinfo = getframeinfo(currentframe())
     """
     Получить сумму стоимостей позиций и их количество
     :param chat_id: Уникальный id пользователя в telegram
@@ -202,7 +208,7 @@ def get_positions(chat_id, positions_type: str, month=None, year=None) -> (int, 
     :param year: Год
     :return: Суммарная стоимость позиций, количество позиций
     """
-    print('module.py->get_positions')
+    print('module.py->get_positions',  f'#{frameinfo.lineno}', 'Получить сумму стоимостей позиций и их количество')
     user_id = get_user_id(chat_id)
     if month is not None and year is not None:
         price = session.query(Account.price).filter(Account.user_id == user_id, Account.type == positions_type,
@@ -218,6 +224,7 @@ def get_positions(chat_id, positions_type: str, month=None, year=None) -> (int, 
 
 
 def get_categories_positions(chat_id: str, positions_type: str, month=None, year=None) -> dict:
+    frameinfo = getframeinfo(currentframe())
     """
     Получить сумму позиций по категориям
     :param chat_id: Уникальный id пользователя в telegram
@@ -226,7 +233,7 @@ def get_categories_positions(chat_id: str, positions_type: str, month=None, year
     :param year: Год
     :return: Словарь, где ключ - категория, значение - суммарная стоимость позиций
     """
-    print('module.py->get_categories_positions')
+    print('module.py->get_categories_positions', f'#{frameinfo.lineno}', 'Получить сумму позиций по категориям')
     categories_dict = {}
     id = get_user_id(chat_id)
     categories = get_categories(positions_type)
@@ -256,6 +263,7 @@ def get_categories_positions(chat_id: str, positions_type: str, month=None, year
 
 
 def get_data(chat_id: str, positions_type: str, month=None, year=None) -> dict:
+    frameinfo = getframeinfo(currentframe())
     """
     Получение информации для формирования таблицы
     :param chat_id: Уникальный id пользователя в telegram
@@ -264,12 +272,12 @@ def get_data(chat_id: str, positions_type: str, month=None, year=None) -> dict:
     :param year: Год
     :return: Словарь с именами, категориями, датами и стоимостью запрашиваемых позиций за запрашивамое время
     """
-    print('module.py->get_data')
+    print('module.py->get_data', f'#{frameinfo.lineno}', 'Получение информации для формирования таблицы')
     user_id = get_user_id(chat_id)
     data_dict = {}
     if month is None and year is None:
-        names = list(session.query(Account.name).filter(Account.user_id == user_id,
-                                                        Account.type == positions_type).all())
+        # names = list(session.query(Account.name).filter(Account.user_id == user_id,
+        #                                                 Account.type == positions_type).all())
         categories = list(session.query(Account.category_id).filter(Account.user_id == user_id,
                                                                     Account.type == positions_type).all())
         prices = list(session.query(Account.price).filter(Account.user_id == user_id,
@@ -283,22 +291,22 @@ def get_data(chat_id: str, positions_type: str, month=None, year=None) -> dict:
 
         dates = []
 
-        for i in range(len(names)):
-            names[i] = names[i][0]
+        for i in range(len(categories)):
+            # categories[i] = categories[i][0]
             categories[i] = get_category_name(categories[i][0], positions_type)
             prices[i] = prices[i][0]
             dates.append(f'{days[i][0]}/{months[i][0]}/{years[i][0]}')
 
-        data_dict['Наименование'] = names
+        # data_dict['Наименование'] = names
         data_dict['Категория'] = categories
         data_dict['Сумма'] = prices
         data_dict['Дата'] = dates
 
     else:
-        names = list(session.query(Account.name).filter(Account.user_id == user_id,
-                                                        Account.type == positions_type,
-                                                        Account.month == month,
-                                                        Account.year == year).all())
+        # names = list(session.query(Account.name).filter(Account.user_id == user_id,
+        #                                                 Account.type == positions_type,
+        #                                                 Account.month == month,
+        #                                                 Account.year == year).all())
         categories = list(session.query(Account.category_id).filter(Account.user_id == user_id,
                                                                     Account.type == positions_type,
                                                                     Account.month == month,
@@ -312,13 +320,13 @@ def get_data(chat_id: str, positions_type: str, month=None, year=None) -> dict:
 
         dates = []
 
-        for i in range(len(names)):
-            names[i] = names[i][0]
+        for i in range(len(categories)):
+            # names[i] = names[i][0]
             categories[i] = get_category_name(categories[i][0], positions_type)
             prices[i] = prices[i][0]
             dates.append(f'{days[i][0]}/{month}/{year}')
 
-        data_dict['Наименование'] = names
+        # data_dict['Наименование'] = names
         data_dict['Категория'] = categories
         data_dict['Сумма'] = prices
         data_dict['Дата'] = dates
@@ -329,10 +337,11 @@ def get_data(chat_id: str, positions_type: str, month=None, year=None) -> dict:
 # Служебные функции и классы для работы бота и базы данных
 
 class StatisticsRequest(object):
+    frameinfo = getframeinfo(currentframe())
     """
     Запрос статистики, хранящий в себе параметры, необходимые для вывода нужной статистики
     """
-    print('module.py->StatisticsRequest')
+    print('module.py->StatisticsRequest', f'#{frameinfo.lineno}', 'Запрос статистики, хранящий в себе параметры, необходимые для вывода нужной статистики')
     def __init__(self, positions_type, request_type=None, month=None, year=None):
         self.positions_type = positions_type
         self.request_type = request_type
@@ -341,12 +350,13 @@ class StatisticsRequest(object):
 
 
 def sum_price(positions) -> float:
+    frameinfo = getframeinfo(currentframe())
     """
     Вывод суммы позиций
     :param positions: Список позиций
     :return: Суммарная стоимость
     """
-    print('module.py->sum_price')
+    print('module.py->sum_price', f'#{frameinfo.lineno}', 'Вывод суммы позиций')
     all_price = 0
     for i in positions:
         all_price += float(i[0])
@@ -354,13 +364,14 @@ def sum_price(positions) -> float:
 
 
 def get_medium(current: float, all_count: float) -> float or str:
+    frameinfo = getframeinfo(currentframe())
     """
     Возвращает среднюю стоимость позиций
     :param current: Стоимость всех позиций
     :param all_count: Количество позиций
     :return: Средняя стоимость или строка с прочерком в случае ошибки
     """
-    print('module.py->get_medium')
+    print('module.py->get_medium', f'#{frameinfo.lineno}', 'Возвращает среднюю стоимость позиций')
     if not all_count == 0:
         return round(current / all_count, 2)
     else:
@@ -368,12 +379,13 @@ def get_medium(current: float, all_count: float) -> float or str:
 
 
 def month_name(number: int) -> str:
+    frameinfo = getframeinfo(currentframe())
     """
     Возвращает название месяца
     :param number: Номер месяца
     :return: Название
     """
-    print('module.py->month_name')
+    print('module.py->month_name', f'#{frameinfo.lineno}')
     if number == 1:
         return "январь"
     elif number == 2:

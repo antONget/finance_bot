@@ -531,10 +531,12 @@ def call_expense(call):
     bot.answer_callback_query(callback_query_id=call.id)
     position = module.Account(type='expense', user_id=module.get_user_id(call.message.chat.id))
     temp_dict[call.message.chat.id] = position
-    bot.send_message(call.message.chat.id, "📝 Введите наименование расхода или пришлите фотографию QR кода на чеке")
+    # bot.send_message(call.message.chat.id, "📝 Введите наименование расхода или пришлите фотографию QR кода на чеке")
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     # вызов функции process_name_step
-    bot.register_next_step_handler(call.message, process_name_step)
+    # bot.register_next_step_handler(call.message, process_name_step)
+    categories_keyboard = get_categories_keyboard(call.data)
+    bot.send_message(call.message.chat.id, '🗂 Выберете категорию из списка:', reply_markup=categories_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: str(call.data).isdigit())
@@ -685,12 +687,12 @@ def callback_confirm(call):
     bot.answer_callback_query(callback_query_id=call.id)
     position = temp_dict[call.message.chat.id]
     print(position)
-    temp_dict[call.message.chat.id].name = 'что-то'
+    # temp_dict[call.message.chat.id].name = 'что-то'
     module.add_position(position)
     if position.type == 'income':
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=f'ℹ️Информация о доходе:\n'
-                                   f'Название: {position.name}\n'
+                                #    f'Название: {position.name}\n'
                                    f'Сумма:  {round(position.price, 2)} руб\n'
                                    f'Категория: '
                                    f'{module.get_category_name(position.category_id, position.type)}\n '
@@ -702,7 +704,7 @@ def callback_confirm(call):
     if position.type == 'expense':
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=f'ℹ️Информация о расходе:\n'
-                                   f'Название: {position.name}\n'
+                                #    f'Название: {position.name}\n'
                                    f'Цена: {round(position.price, 2)} руб\n'
                                    f'Категория: '
                                    f'{module.get_category_name(position.category_id, position.type)}\n '
@@ -761,7 +763,7 @@ def callback_statistic(call):
     Вызов меню статистики
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_statistic', f'# {frameinfo.lineno}')
+    print('bot.py->callback_statistic', f'#{frameinfo.lineno}', 'Вызов меню статистики')
     bot.answer_callback_query(callback_query_id=call.id)
     statistics_keyboard = get_statistics_keyboard()
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -776,7 +778,7 @@ def callback_positions_type_statistics(call):
     Выбор типа статистики
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_positions_type_statistics', f'# {frameinfo.lineno}')
+    print('bot.py->callback_positions_type_statistics', f'#{frameinfo.lineno}', 'Выбор типа статистики')
     bot.answer_callback_query(callback_query_id=call.id)
     positions_type = call.data.split('_')[0]
     temp_dict[call.message.chat.id] = module.StatisticsRequest(positions_type=positions_type)
@@ -792,7 +794,7 @@ def callback_request_type_statistics(call):
     Выбор периода статистики
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_request_type_statistics', f'# {frameinfo.lineno}')
+    print('bot.py->callback_request_type_statistics', f'#{frameinfo.lineno}', 'Выбор периода статистики')
     bot.answer_callback_query(callback_query_id=call.id)
     temp_dict[call.message.chat.id].request_type = call.data
     positions_type = temp_dict[call.message.chat.id].positions_type
@@ -824,12 +826,12 @@ def callback_all_time(call):
     Вывод статистики за всё время
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_all_time', f'# {frameinfo.lineno}')
+    print('bot.py->callback_all_time', f'# {frameinfo.lineno}', 'Вывод статистики за всё время')
     bot.answer_callback_query(callback_query_id=call.id)
     statistics_request = temp_dict[call.message.chat.id]
     all_price, all_count = module.get_positions(call.message.chat.id, statistics_request.positions_type)
-    print('---')
-    print(all_price, all_count)
+    # print('---')
+    # print(all_price, all_count)
     word = ''
     if statistics_request.positions_type == 'income':
         word = 'доход'
