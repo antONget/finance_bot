@@ -209,7 +209,7 @@ def process_confirm_step(message):
         bot.send_message(
             message.chat.id,
             f'ℹ️Информация о доходе:\n'
-            f'Название: {position.name}\n'
+            # f'Название: {position.name}\n'
             f'Сумма:  {round(position.price, 2)} руб\n'
             f'Категория: '
             f'{module.get_category_name(position.category_id, position.type)}\n '
@@ -222,7 +222,7 @@ def process_confirm_step(message):
         bot.send_message(
             message.chat.id,
             f'ℹ️Информация о расходе:\n'
-            f'Название: {position.name}\n'
+            # f'Название: {position.name}\n'
             f'Цена: {round(position.price, 2)} руб\n'
             f'Категория: '
             f'{module.get_category_name(position.category_id, position.type)}\n '
@@ -514,7 +514,10 @@ def call_income(call):
     # редактируем сообщение (удаляем клавиатуру)
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     # bot.send_message(call.message.chat.id, "📝 Введите наименование дохода")
-    bot.register_next_step_handler(call.message, process_name_step)
+    # bot.register_next_step_handler(call.message, process_name_step)
+    categories_keyboard = get_categories_keyboard(call.data)
+    bot.send_message(call.message.
+    chat.id, '🗂 Выберете категорию из списка:', reply_markup=categories_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'expense')
@@ -541,11 +544,11 @@ def callback_category(call):
     Выбор категории
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_category', f'# {frameinfo.lineno}')
+    print('bot.py->callback_category', f'# {frameinfo.lineno}', 'Выбор категории')
     bot.answer_callback_query(callback_query_id=call.id)
     id = -1
     position_type = temp_dict[call.message.chat.id].type
-
+    # получаем id выбранной категории
     categories = module.get_categories(position_type)
     for i in range(len(categories)):
         if str(call.data) == str(i):
@@ -614,7 +617,7 @@ def callback_calendar_ignore(call):
     Пустые клопки для календаря
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_calendar_ignore', f'# {frameinfo.lineno}')
+    print('bot.py->callback_calendar_ignore', f'#{frameinfo.lineno}', 'Пустые клопки для календаря')
     bot.answer_callback_query(callback_query_id=call.id)
 
 
@@ -625,7 +628,7 @@ def callback_calendar_day(call):
     Выбор даты на календаре
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_calendar_day', f'# {frameinfo.lineno}')
+    print('bot.py->callback_calendar_day', f'#{frameinfo.lineno}', 'Выбор даты на календаре')
     bot.answer_callback_query(callback_query_id=call.id)
     date = str(call.data).split(';')
     temp_dict[call.message.chat.id].day = int(date[1])
@@ -682,6 +685,7 @@ def callback_confirm(call):
     bot.answer_callback_query(callback_query_id=call.id)
     position = temp_dict[call.message.chat.id]
     print(position)
+    temp_dict[call.message.chat.id].name = 'что-то'
     module.add_position(position)
     if position.type == 'income':
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,

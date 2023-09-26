@@ -31,7 +31,7 @@ class Account(base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     type = Column(String(10), nullable=False)
-    name = Column(String, nullable=False)
+    # name = Column(String, nullable=False)
     category_id = Column(Integer, ForeignKey('expense_categories.id'))
     price = Column(REAL, nullable=False)
     day = Column(Integer, nullable=False)
@@ -106,12 +106,13 @@ def has_user(chat_id: str) -> bool:
 
 
 def get_user_id(chat_id: str) -> int:
+    frameinfo = getframeinfo(currentframe())
     """
     Получить id в базе по id в telegram
     :param chat_id: Уникальный id пользователя в telegram
     :return: id в базе данных
     """
-    print('module.py->get_user_id', 'Получение id в базе по id в telegram')
+    print('module.py->get_user_id', f'{frameinfo.lineno}', 'Получение id в базе по id в telegram')
     user = session.query(Users).filter_by(user_chat_id=chat_id).one()
     return user.id
 
@@ -135,12 +136,13 @@ def get_category_name(id: int, position_type: str) -> str:
 
 
 def get_categories(position_type: str) -> list:
+    frameinfo = getframeinfo(currentframe())
     """
     Получить список категорий по типу
     :param position_type: Тип категории
     :return: Список категорий
     """
-    print('module.py->get_categories', 'Получить список категорий по типу', f'{position_type}')
+    print('module.py->get_categories', f'{frameinfo.lineno}', 'Получить список категорий по типу', f'{position_type}')
     categories = []
     if position_type == 'income':
         categories = list(session.query(IncomeCategories.name).all())
@@ -151,20 +153,22 @@ def get_categories(position_type: str) -> list:
     return categories
 
 def del_position(name_cat):
+    frameinfo = getframeinfo(currentframe())
     """
     Удаление категории
     """
-    print('module.py->del_position', 'Удаление выбранной категории')
+    print('module.py->del_position',f'{frameinfo.lineno}', 'Удаление выбранной категории')
     i = session.query(ExpenseCategories).filter(ExpenseCategories.name == name_cat).one()
     session.delete(i)
     session.commit()
 
 def add_position(position: Account):
+    frameinfo = getframeinfo(currentframe())
     """
     Добавить объект позиции в базу данных
     :param position: Объект строки с информацией о позиции
     """
-    print('module.py->add_position', '#156', 'Добавить объект позиции в базу данных')
+    print('module.py->add_position', '#156', f'{frameinfo.lineno}', 'Добавить объект позиции в базу данных')
     session.add(position)
     session.commit()
 
