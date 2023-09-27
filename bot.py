@@ -1,5 +1,5 @@
 from fileinput import lineno
-import telebot
+import pyTelegramBotAPI
 from inspect import currentframe, getframeinfo
 
 import plot
@@ -10,7 +10,7 @@ from keyboards import *
 # Тело телеграм бота
 
 API = '6561799727:AAH8G86QrKpsU97d_XVyvHCgyWUSH7xCN1Q'
-bot = telebot.TeleBot(API)
+bot = pyTelegramBotAPI.TeleBot(API)
 
 temp_dict = {}
 temp_category = {}
