@@ -1,5 +1,5 @@
 from fileinput import lineno
-import pyTelegramBotAPI
+import telebot
 from inspect import currentframe, getframeinfo
 
 import plot
@@ -10,10 +10,12 @@ from keyboards import *
 # Тело телеграм бота
 
 API = '6561799727:AAH8G86QrKpsU97d_XVyvHCgyWUSH7xCN1Q'
-bot = pyTelegramBotAPI.TeleBot(API)
+bot = telebot.TeleBot(API)
 
-temp_dict = {}
+temp_dict = {'bonus':'0.0'}
 temp_category = {}
+bonus = True
+
 
 # Команды бота
 
@@ -173,6 +175,35 @@ def process_name_step(message):
                                  'Пришлите фотографию QR кода фотографией или документом')
         bot.register_next_step_handler(reply, process_name_step)
 
+def process_bonus_step(message):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Добавление списанных баллов
+    """
+    print('bot.py->process_bonus_step', f'#{frameinfo.lineno}', 'Добавление списанных баллов')
+    print(message.text,' :', temp_dict['bonus'])
+    temp_dict['bonus'] = message.text
+    bonus = True
+    try:
+        temp_dict[message.chat.id].bonus = float(temp_dict['bonus'].replace(',', '.'))
+        if float(message.text) < 0:
+            reply = bot.send_message(message.chat.id, "Введено не положительное число, введите корректное значение")
+            temp_dict['bonus'] = reply.text
+            # print(reply)
+            bot.register_next_step_handler(reply, process_bonus_step)
+            return
+        else:
+            date_keyboard = get_date_keyboard()
+            bot.send_message(message.chat.id, "📅 Выберете дату", reply_markup=date_keyboard)
+            return bonus
+
+    except ValueError:
+        reply = bot.send_message(message.chat.id, "Введено не число, введите баллы корректно")
+        # temp_dict['bonus'] = reply.text
+        # print(reply)
+        bot.register_next_step_handler(reply, process_bonus_step)
+        return
+
 
 def process_price_step(message):
     frameinfo = getframeinfo(currentframe())
@@ -182,6 +213,7 @@ def process_price_step(message):
     """
     print('bot.py->process_price_step', f'#{frameinfo.lineno}', 'Добавление стоимости позиции')
     try:
+        print('try')
         temp_dict[message.chat.id].price = float(message.text.replace(',', '.'))
         if float(message.text) <= 0:
             reply = bot.send_message(message.chat.id, "Введено не положительное число, введите цену корректно")
@@ -189,12 +221,17 @@ def process_price_step(message):
             return
 
     except ValueError:
+        print('ValueError')
         reply = bot.send_message(message.chat.id, "Введено не число, введите цену корректно")
         bot.register_next_step_handler(reply, process_price_step)
         return
-    date_keyboard = get_date_keyboard()
-    bot.send_message(message.chat.id, "📅 Выберете дату", reply_markup=date_keyboard)
-
+    print('get_add_bonus')
+    add_bonus_keyboard = get_add_bonus()
+    reply = bot.send_message(message.chat.id, "Укажите количество использованных бонусов/баллов?", reply_markup=add_bonus_keyboard)
+    print('bot.register_next_step_handler(bonus, process_bonus_step)')
+    # temp_dict['bonus'] = reply.text
+   
+    bot.register_next_step_handler(reply, process_bonus_step)
 
 def process_confirm_step(message):
     frameinfo = getframeinfo(currentframe())
@@ -226,6 +263,7 @@ def process_confirm_step(message):
             f'Цена: {round(position.price, 2)} руб\n'
             f'Категория: '
             f'{module.get_category_name(position.category_id, position.type)}\n '
+            f'Бонусы: {position.bonus}\n'
             f'Дата: {position.day}/'
             f'{position.month}/'
             f'{position.year}\n'
@@ -385,6 +423,26 @@ def call_add_category(call):
     bot.send_message(call.message.chat.id, "📝 Введите наименование категории")
     bot.register_next_step_handler(call.message, process_add_category)
 
+@bot.callback_query_handler(func=lambda call: call.data == 'pass_bonus')
+def call_add_bonus(call):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Пропусить добавление бонцсов
+    :param call: Объект вызова Inline клавиатуры
+    """
+    print('bot.py->call_add_bonus', f'# {frameinfo.lineno}', 'Пропусить добавление бонусов')
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+    # category_keyboard = get_categories_keyboard('expense')
+    # edit_category = get_edit_category()
+    bot.answer_callback_query(callback_query_id=call.id)
+    # replay = bot.send_message(call.message.chat.id, "500")
+    # bot.register_next_step_handler(call.message, process_add_category)
+    # bonus = False
+    # temp_dict['bonus'] = '0.0'
+    call.message.text = '0.0'
+    bot.clear_step_handler(call.message)
+    process_bonus_step(call.message)
+    # return bonus
 
 # ''' ЛИМИТЫ'''
 @bot.callback_query_handler(func=lambda call: call.data == 'edit_limit')
@@ -479,7 +537,7 @@ def call_to_menu(call):
     Возврат к меню
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->call_to_menu', f'# {frameinfo.lineno}')
+    print('bot.py->call_to_menu', f'#{frameinfo.lineno}')
     bot.answer_callback_query(callback_query_id=call.id)
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     del temp_dict[call.message.chat.id]
@@ -493,7 +551,7 @@ def call_add(call):
     Добавление позиции
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->call_add', f'# {frameinfo.lineno}', 'нажата кнопка Добавить')
+    print('bot.py->call_add', f'#{frameinfo.lineno}', 'нажата кнопка Добавить')
     bot.answer_callback_query(callback_query_id=call.id)
     plus_minus_keyboard = get_plus_minus_keyboard()
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -507,7 +565,7 @@ def call_income(call):
     Добавление дохода
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->call_income', f'# {frameinfo.lineno}', 'Нажата кнопка "Доход"')
+    print('bot.py->call_income', f'#{frameinfo.lineno}', 'Нажата кнопка "Доход"')
     bot.answer_callback_query(callback_query_id=call.id)
     position = module.Account(type='income', user_id=module.get_user_id(call.message.chat.id))
     temp_dict[call.message.chat.id] = position
@@ -527,7 +585,7 @@ def call_expense(call):
     Добавление расхода
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->call_expense', f'# {frameinfo.lineno}')
+    print('bot.py->call_expense', f'# {frameinfo.lineno}', 'Добавление расхода')
     bot.answer_callback_query(callback_query_id=call.id)
     position = module.Account(type='expense', user_id=module.get_user_id(call.message.chat.id))
     temp_dict[call.message.chat.id] = position
@@ -589,7 +647,7 @@ def callback_yesterday(call):
     Выбор "вчера" в выборе времени
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_yesterday', f'# {frameinfo.lineno}')
+    print('bot.py->callback_yesterday', f'#{frameinfo.lineno}', 'Выбор "вчера" в выборе времени')
     bot.answer_callback_query(callback_query_id=call.id)
     date = (datetime.datetime.today() - datetime.timedelta(days=1)).strftime("%d/%m/%Y").split("/")
     temp_dict[call.message.chat.id].day = int(date[0])
@@ -606,7 +664,7 @@ def callback_other(call):
     Выбор иной даты и вызов календаря
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_other', f'# {frameinfo.lineno}')
+    print('bot.py->callback_other', f'# {frameinfo.lineno}', 'Выбор иной даты и вызов календаря')
     bot.answer_callback_query(callback_query_id=call.id)
     calendar_keyboard = get_calendar_keyboard()
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=calendar_keyboard)
@@ -665,7 +723,7 @@ def callback_calendar_next_month(call):
     Вызов следуюшего месяца на календаре
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_calendar_next_month', f'# {frameinfo.lineno}')
+    print('bot.py->callback_calendar_next_month', f'# {frameinfo.lineno}', 'Вызов следуюшего месяца на календаре')
     bot.answer_callback_query(callback_query_id=call.id)
     date = str(call.data).split(';')
     current = datetime.datetime(int(date[3]), int(date[2]), 1)
@@ -686,7 +744,7 @@ def callback_confirm(call):
     print('bot.py->callback_confirm', f'# {frameinfo.lineno}', 'Подтверждение информации о позиции')
     bot.answer_callback_query(callback_query_id=call.id)
     position = temp_dict[call.message.chat.id]
-    print(position)
+    
     # temp_dict[call.message.chat.id].name = 'что-то'
     module.add_position(position)
     if position.type == 'income':
@@ -702,16 +760,20 @@ def callback_confirm(call):
                                    f'---\n'
                                    f'✅ Доход успешно добавлен')
     if position.type == 'expense':
+        limit_category = module.get_limit_category(module.get_category_name(position.category_id, position.type))
+        dict_sum_category = module.get_categories_positions(chat_id=call.message.chat.id, positions_type=position.type, month=9, year=2023)
+        print(dict_sum_category)
+        name_category = module.get_category_name(position.category_id, position.type)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=f'ℹ️Информация о расходе:\n'
-                                #    f'Название: {position.name}\n'
+                                   f'Баллы: -{position.bonus}\n'
                                    f'Цена: {round(position.price, 2)} руб\n'
                                    f'Категория: '
-                                   f'{module.get_category_name(position.category_id, position.type)}\n '
+                                   f'{name_category}\n '
                                    f'Дата: {position.day}/'
                                    f'{position.month}/'
                                    f'{position.year}\n'
-                                   f'---\n'
+                                   f'Остаток/Лимит: {limit_category-dict_sum_category[name_category][0]}/{limit_category}\n'
                                    f'✅ Расход успешно добавлен')
 
     del temp_dict[call.message.chat.id]
@@ -725,13 +787,13 @@ def callback_cancel(call):
     Отмена добавления позиции
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->callback_cancel', f'# {frameinfo.lineno}')
+    print('bot.py->callback_cancel', f'# {frameinfo.lineno}', 'Отмена добавления позиции')
     bot.answer_callback_query(callback_query_id=call.id)
     position = temp_dict[call.message.chat.id]
     if position.type == 'income':
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=f'ℹ️Информация о доходе:\n'
-                                   f'Название: {position.name}\n'
+                                #    f'Название: {position.name}\n'
                                    f'Сумма:  {round(position.price, 2)} руб\n'
                                    f'Категория: '
                                    f'{module.get_category_name(position.category_id, position.type)}\n '
@@ -743,7 +805,7 @@ def callback_cancel(call):
     if position.type == 'expense':
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=f'ℹ️Информация о расходе:\n'
-                                   f'Название: {position.name}\n'
+                                #    f'Название: {position.name}\n'
                                    f'Цена: {round(position.price, 2)} руб\n'
                                    f'Категория: '
                                    f'{module.get_category_name(position.category_id, position.type)}\n '
@@ -995,8 +1057,8 @@ def callback_next_slide(call):
                           reply_markup=get_month_slider(statistics_type, int(nex.year), int(nex.month)))
 
 
-bot.enable_save_next_step_handlers()
-bot.load_next_step_handlers()
+# bot.enable_save_next_step_handlers(delay=2)
+# bot.load_next_step_handlers()
 
 if __name__ == '__main__':
     bot.polling()

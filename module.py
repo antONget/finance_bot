@@ -34,6 +34,7 @@ class Account(base):
     # name = Column(String, nullable=False)
     category_id = Column(Integer, ForeignKey('expense_categories.id'))
     price = Column(REAL, nullable=False)
+    bonus = Column(REAL, nullable=False)
     day = Column(Integer, nullable=False)
     month = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
@@ -117,6 +118,17 @@ def get_user_id(chat_id: str) -> int:
     print('module.py->get_user_id', f'#{frameinfo.lineno}', 'Получение id в базе по id в telegram')
     user = session.query(Users).filter_by(user_chat_id=chat_id).one()
     return user.id
+
+def get_limit_category(name_cat: str) -> float:
+    frameinfo = getframeinfo(currentframe())
+    """
+    Получить id в базе по id в telegram
+    :param chat_id: Уникальный id пользователя в telegram
+    :return: id в базе данных
+    """
+    print('module.py->get_user_id', f'#{frameinfo.lineno}', 'Получение id в базе по id в telegram')
+    category = session.query(ExpenseCategories).filter_by(name=name_cat).one()
+    return category.limit
 
 
 def get_category_name(id: int, position_type: str) -> str:
@@ -385,7 +397,7 @@ def month_name(number: int) -> str:
     :param number: Номер месяца
     :return: Название
     """
-    print('module.py->month_name', f'#{frameinfo.lineno}')
+    print('module.py->month_name', f'#{frameinfo.lineno}', 'Возвращает название месяца')
     if number == 1:
         return "январь"
     elif number == 2:

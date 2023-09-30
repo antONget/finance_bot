@@ -91,6 +91,19 @@ def get_edit_limit() -> InlineKeyboardMarkup:
 
     return limit_edit_keyboard
 
+def get_add_bonus() -> InlineKeyboardMarkup:
+    frameinfo = getframeinfo(currentframe())
+    """
+    Диалог для указания баллов
+    :return: Клавиатура меню
+    """
+    print('keyboards.py->get_add_bonus', f'#{frameinfo.lineno}', 'Диалог для указания баллов')
+    add_bonus_keyboard = InlineKeyboardMarkup()
+    pass_bonus = InlineKeyboardButton('Пропустить', callback_data='pass_bonus')
+    add_bonus_keyboard.add(pass_bonus)
+
+    return add_bonus_keyboard
+
 def get_plus_minus_keyboard() -> InlineKeyboardMarkup:
     frameinfo = getframeinfo(currentframe())
     """
@@ -204,7 +217,7 @@ def get_calendar_keyboard(year=None, month=None) -> InlineKeyboardMarkup:
     Вывод клаиватуры с календарём для выбора даты
     :return: Клавиатура календаря
     """
-    print('keyboards.py->get_calendar_keyboard', f'#{frameinfo.lineno}')
+    print('keyboards.py->get_calendar_keyboard', f'#{frameinfo.lineno}', 'Вывод клаиватуры с календарём для выбора даты')
     now = datetime.datetime.now()
     if year is None:
         year = now.year
