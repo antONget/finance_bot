@@ -167,13 +167,16 @@ def get_categories(position_type: str) -> list:
 
     return categories
 
-def del_position(name_cat):
+def del_position(name_cat, type_position):
     frameinfo = getframeinfo(currentframe())
     """
     Удаление категории
     """
     print('module.py->del_position',f'#{frameinfo.lineno}', 'Удаление выбранной категории')
-    i = session.query(ExpenseCategories).filter(ExpenseCategories.name == name_cat).one()
+    if type_position == 'expense':
+        i = session.query(ExpenseCategories).filter(ExpenseCategories.name == name_cat).one()
+    else:
+        i = session.query(IncomeCategories).filter(IncomeCategories.name == name_cat).one()
     session.delete(i)
     session.commit()
 
@@ -187,13 +190,16 @@ def add_position(position: Account):
     session.add(position)
     session.commit()
 
-def add_row_table(name_cat):
+def add_row_table(name_cat, type_position):
     frameinfo = getframeinfo(currentframe())
     '''
     Добавление новой категории в таблицу расходов
     '''
     print('module.py->add_row_table', f'#{frameinfo.lineno}', 'Добавление новой категории в таблицу расходов')
-    session.add(ExpenseCategories(name=name_cat, limit=1000))
+    if type_position == 'expense':
+        session.add(ExpenseCategories(name=name_cat, limit=1000))
+    else:
+        session.add(IncomeCategories(name=name_cat))
     session.commit()
 
 def edit_limit(type_cat, name_cat, new_limit):

@@ -12,13 +12,14 @@ from keyboards import *
 API = '6561799727:AAH8G86QrKpsU97d_XVyvHCgyWUSH7xCN1Q'
 bot = telebot.TeleBot(API)
 
-temp_dict = {'bonus':'0.0'}
+temp_dict = {}
 temp_category = {}
-bonus = True
+# bonus = True
 
 
 # Команды бота
 
+### START ###
 @bot.message_handler(commands=['start'])
 def command_start(message):
     frameinfo = getframeinfo(currentframe())
@@ -272,21 +273,27 @@ def process_confirm_step(message):
 def process_add_category(message):
     frameinfo = getframeinfo(currentframe())
     """
-    Добавление категории расхода
+    Добавление категории расхода/дохода
     :param message: Объект сообщения
     """
-    print('bot.py->process_add_category', f'#{frameinfo.lineno}', 'Добавление категории расхода')
+    print('bot.py->process_add_category', f'#{frameinfo.lineno}', 'Добавление категории расхода/дохода')
     if message.content_type == 'text':
         if dublicate_category(message):
             reply = bot.send_message(message.chat.id, "📝 Категория уже существует, укажите другое название ")
             bot.register_next_step_handler(reply, process_add_category)
         else:
-            limit_edit_keyboard = get_edit_limit()
-            print(message.text)
-            module.add_row_table(message.text)
             temp_category['add_cat'] = message.text
-            bot.send_message(message.chat.id, f'Категория {temp_category["add_cat"]} добавлена! По умолчанию установлен лимит в 1000 рублей. Хотите изменить?',
-            reply_markup=limit_edit_keyboard)
+            if temp_dict['inc_exp'] == 'expense':
+                limit_edit_keyboard = get_edit_limit()
+                # print(message.text)
+                module.add_row_table(message.text, 'expense')
+                bot.send_message(message.chat.id, f'Категория {temp_category["add_cat"]} добавлена! По умолчанию установлен лимит в 1000 рублей. Хотите изменить?',
+                reply_markup=limit_edit_keyboard)
+            if temp_dict['inc_exp'] == 'income':
+                module.add_row_table(message.text, 'income')
+                category_keyboard = get_edit_category()
+                bot.send_message(message.chat.id, f'Категория {temp_category["add_cat"]} добавлена!',
+                reply_markup=category_keyboard)
 
     else:
         reply = bot.send_message(message.chat.id, 'Введите корректное название категории')
@@ -298,7 +305,7 @@ def dublicate_category(message):
     Проверка на уникальность добавляемой категории
     """
     print('bot.py->dublicate_category', f'#{frameinfo.lineno}', 'Проверка на уникальность добавляемой категории')
-    tuple_cat = module.get_categories('expense')
+    tuple_cat = module.get_categories(temp_dict['inc_exp'])
     list_cat = [item for t in tuple_cat for item in t]
     if str(message.text) in list_cat:
         return True
@@ -339,6 +346,18 @@ def call_menu(call):
                                '* Для получения статистики нажмите "Меню" статистики и выберете нужную '
                                'статистику\n', reply_markup=menu_keyboard)
 
+@bot.callback_query_handler(func=lambda call: call.data == 'start')
+def call_start(call):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Вызов стартового диалогового окна
+    :param call: Объект вызова Inline клавиатуры
+    """
+    print('bot.py->call_start', f'#{frameinfo.lineno}', ' Вызов стартового диалогового окна')   
+   
+    text_start = f'Приветствую, {call.message.chat.username}! Я помогу учитывать доходы и расходы\n Я умею:\n * Добавлять доходы и   расходы\n * Считывать QR коды чеков\n * Выводить различную статистику \n * Отправлять инфографику и таблицы \n Для работы со мной перейдите в меню\n /help - помощь и обратная связь'
+    start_keyboard = get_start_keyboard()
+    bot.send_message(call.message.chat.id, text_start, reply_markup=start_keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'setting')
 def callback_setting(call):
@@ -348,12 +367,47 @@ def callback_setting(call):
     :param call: Объект вызова Inline клавиатуры
     """
     print('bot.py->callback_setting', f'#{frameinfo.lineno}', 'Отображение диалога при нажатии клавиши Настройка')
-    setting_keyboard = get_setting_keyboard()
+    # setting_keyboard = get_setting_keyboard()
+    update_category = get_plus_minus_update_category_keyboard()
     bot.answer_callback_query(callback_query_id=call.id)
     bot.send_message(chat_id=call.message.chat.id, 
-                          text='В разделе настройки можно изменить/добавить категории и управлять лимитами', 
+                          text='В разделе настройки можно изменить/добавить категории и управлять лимитами расходов', 
+                          reply_markup=update_category)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'expense_update')
+def callback_setting_expense(call):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Отображение диалога при нажатии клавиши Настройка
+    :param call: Объект вызова Inline клавиатуры
+    """
+    print('bot.py->callback_setting', f'#{frameinfo.lineno}', 'Отображение диалога при нажатии клавиши Настройка')
+    temp_dict['inc_exp'] = call.data.split('_')[0]
+    setting_keyboard = get_setting_keyboard()
+    # update_category = get_plus_minus_update_category_keyboard()
+    bot.answer_callback_query(callback_query_id=call.id)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+    bot.send_message(chat_id=call.message.chat.id, 
+                          text='Удалить/Добавить категорию изменить Лимиты расходов', 
                           reply_markup=setting_keyboard)
 
+@bot.callback_query_handler(func=lambda call: call.data == 'income_update')
+def callback_setting_income(call):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Отображение диалога при нажатии клавиши Настройка/Доход
+    :param call: Объект вызова Inline клавиатуры
+    """
+    print('bot.py->callback_setting_income', f'#{frameinfo.lineno}', 'Отображение диалога при нажатии клавиши Настройка/Доход')
+    temp_dict['inc_exp'] = call.data.split('_')[0]
+    # setting_keyboard = get_setting_keyboard()
+    edit_keyboard = get_edit_category()
+    # update_category = get_plus_minus_update_category_keyboard()
+    bot.answer_callback_query(callback_query_id=call.id)
+    bot.send_message(chat_id=call.message.chat.id, 
+                          text='Удалить/Добавить категорию Дохода', 
+                          reply_markup=edit_keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'categorys')
 def call_edit_category(call):
@@ -365,11 +419,16 @@ def call_edit_category(call):
     print('bot.py->call_edit_category', f'#{frameinfo.lineno}', 'Вывод диалога при нажатии кнопки Настройки/Категории')
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     # category_keyboard = get_categories_keyboard('expense')
-    edit_category = get_edit_category()
+    # edit_category = get_edit_category()
     bot.answer_callback_query(callback_query_id=call.id)
+    # bot.send_message(chat_id=call.message.chat.id, 
+    #                       text='Удалить или добавить категорию', 
+    #                       reply_markup=edit_category)
+    # set_cat = get_plus_minus_limit_keyboard()
+    set_cat=get_edit_category()
     bot.send_message(chat_id=call.message.chat.id, 
-                          text='Удалить или добавить категорию', 
-                          reply_markup=edit_category)
+                        text='Правка категорий доход/расход', 
+                        reply_markup=set_cat)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'del_cat')
 def call_del_category(call):
@@ -380,7 +439,7 @@ def call_del_category(call):
     """
     print('bot.py->call_del_category', f'#{frameinfo.lineno}', 'Выбор категории расхода для удаления из списка')
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
-    delcategory_keyboard = get_delcategories_keyboard('expense')
+    delcategory_keyboard = get_delcategories_keyboard(temp_dict['inc_exp'])
     # edit_category = get_edit_category()
     bot.answer_callback_query(callback_query_id=call.id)
     bot.send_message(chat_id=call.message.chat.id, 
@@ -391,15 +450,15 @@ def call_del_category(call):
 def call_delete_category(call):
     frameinfo = getframeinfo(currentframe())
     """
-    Удаление выбранной категории расхода из списка
+    Удаление выбранной категории из списка
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->call_delete_category', f'#{frameinfo.lineno}', 'Удаление выбранной категории расхода из списка')
+    print('bot.py->call_delete_category', f'#{frameinfo.lineno}', 'Удаление выбранной категории из списка')
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     # print(str(call.data).split('_'))
     name_cat = call.message.json['reply_markup']['inline_keyboard'][int(str(call.data).split('_')[2])][0]['text']
     # print(name_cat)
-    module.del_position(name_cat)
+    module.del_position(name_cat, temp_dict['inc_exp'])
     bot.send_message(chat_id=call.message.chat.id, 
                           text=f'Категория "{name_cat}" успешно удалена!')
     edit_category = get_edit_category()
@@ -497,7 +556,7 @@ def call_select_cat_update_limit(call):
     Правка лимитов существующих категорий категории
     :param call: Объект вызова Inline клавиатуры
     """
-    print('bot.py->call_update_income_limit', f'#{frameinfo.lineno}')
+    print('bot.py->call_update_income_limit', f'#{frameinfo.lineno}', 'Правка лимитов существующих категорий категории')
     bot.answer_callback_query(callback_query_id=call.id)
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     # номер нажатой кнопки

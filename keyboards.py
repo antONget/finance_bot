@@ -66,15 +66,15 @@ def get_setting_keyboard() -> InlineKeyboardMarkup:
 def get_edit_category() -> InlineKeyboardMarkup:
     frameinfo = getframeinfo(currentframe())
     """
-    Вывод клаиватуры меню
+    клавиатура при нажатии кнопки Настройки/
     :return: Клавиатура меню
     """
-    print('keyboards.py->get_edit_category', f'#{frameinfo.lineno}', 'клавиатура при нажатии кнопки Настройки/Категории')
+    print('keyboards.py->get_edit_category', f'#{frameinfo.lineno}', 'клавиатура при нажатии кнопки Настройки/')
     setting_keyboard = InlineKeyboardMarkup()
     del_cat = InlineKeyboardButton('Удалить', callback_data='del_cat')
     add_cat = InlineKeyboardButton('Добавить', callback_data='add_cat')
     setting_keyboard.add(del_cat, add_cat)
-
+    # print('keyboard create')
     return setting_keyboard
 
 def get_edit_limit() -> InlineKeyboardMarkup:
@@ -133,6 +133,21 @@ def get_plus_minus_limit_keyboard() -> InlineKeyboardMarkup:
     plus_minus_limit_keyboard.add(plus_button, minus_button, back)
 
     return plus_minus_limit_keyboard
+
+def get_plus_minus_update_category_keyboard() -> InlineKeyboardMarkup:
+    frameinfo = getframeinfo(currentframe())
+    """
+    клавиатура при нажатии клавижи Настройки
+    :return: Клавиатура для выбора дохода или расхода
+    """
+    print('keyboards.py->get_plus_minus_update_category_keyboard', f'#{frameinfo.lineno}', 'клавиатура при нажатии клавижи Настройки')
+    plus_minus_limit_keyboard = InlineKeyboardMarkup(row_width=2)
+    plus_button = InlineKeyboardButton("➕ Доход", callback_data='income_update')
+    minus_button = InlineKeyboardButton("➖ Расход", callback_data='expense_update')
+    back = InlineKeyboardButton('⬅ Назад', callback_data='start')
+    plus_minus_limit_keyboard.add(plus_button, minus_button, back)
+
+    return plus_minus_limit_keyboard    
 
 def get_categories_keyboard(position_type: str) -> InlineKeyboardMarkup:
     frameinfo = getframeinfo(currentframe())
