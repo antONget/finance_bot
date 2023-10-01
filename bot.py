@@ -1,7 +1,7 @@
 from fileinput import lineno
 import telebot
 from inspect import currentframe, getframeinfo
-
+# import pyTelegramBotAPI as telebot
 import plot
 import qr
 import tableform
@@ -12,7 +12,7 @@ from keyboards import *
 API = '6561799727:AAH8G86QrKpsU97d_XVyvHCgyWUSH7xCN1Q'
 bot = telebot.TeleBot(API)
 
-temp_dict = {}
+temp_dict = {'num_block': 0}
 temp_category = {}
 # bonus = True
 
@@ -505,6 +505,47 @@ def call_add_category(call):
     bot.send_message(call.message.chat.id, "📝 Введите наименование категории")
     bot.register_next_step_handler(call.message, process_add_category)
 
+@bot.callback_query_handler(func=lambda call: call.data == 'back_block')
+def call_back_block(call):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Возврат на предыдущий блок категорий
+    :param call: Объект вызова Inline клавиатуры
+    """
+    print('bot.py->call_back_block', f'# {frameinfo.lineno}', 'Возврат на предыдущий блок категорий')
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+    # category_keyboard = get_categories_keyboard('expense')
+    # edit_category = get_edit_category()
+    bot.answer_callback_query(callback_query_id=call.id)
+    temp_dict['num_block'] -= 1
+    if temp_dict['num_block'] < 0:
+       temp_dict['num_block'] = 0 
+    block_keyboard = get_categories_keyboard_block(temp_dict[call.message.chat.id].type, temp_dict['num_block'])
+    bot.send_message(call.message.chat.id, "Выберите категорию", reply_markup=block_keyboard)
+    # bot.register_next_step_handler(call.message, process_add_category)
+
+@bot.callback_query_handler(func=lambda call: call.data == 'next_block')
+def call_back_block(call):
+    frameinfo = getframeinfo(currentframe())
+    """
+    Возврат на предыдущий блок категорий
+    :param call: Объект вызова Inline клавиатуры
+    """
+    print('bot.py->call_back_block', f'# {frameinfo.lineno}', 'Возврат на предыдущий блок категорий')
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+    # category_keyboard = get_categories_keyboard('expense')
+    # edit_category = get_edit_category()
+    bot.answer_callback_query(callback_query_id=call.id)
+    categories = module.get_categories(temp_dict[call.message.chat.id].type)
+    num_cat_block = 6
+    count_block = len(categories) // num_cat_block
+    temp_dict['num_block'] += 1
+    if temp_dict['num_block'] > count_block:
+        temp_dict['num_block'] = count_block
+    block_keyboard = get_categories_keyboard_block(temp_dict[call.message.chat.id].type, temp_dict['num_block'])
+    bot.send_message(call.message.chat.id, "Выберите категорию", reply_markup=block_keyboard)
+    # bot.register_next_step_handler(call.message, process_add_category)
+
 @bot.callback_query_handler(func=lambda call: call.data == 'pass_bonus')
 def call_pass_bonus(call):
     frameinfo = getframeinfo(currentframe())
@@ -704,7 +745,7 @@ def call_expense(call):
     # input_date_keyboard = get_date_keyboard()
     # bot.send_message(call.message.
     # chat.id, 'Укажите дату для позиции', reply_markup=input_date_keyboard)
-    categories_keyboard = get_categories_keyboard(call.data)
+    categories_keyboard = get_categories_keyboard_block(call.data, temp_dict['num_block'])
     bot.send_message(call.message.chat.id, "📝 Введите наименование расхода", reply_markup=categories_keyboard)
 
 
