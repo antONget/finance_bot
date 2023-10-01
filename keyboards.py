@@ -104,17 +104,30 @@ def get_add_bonus() -> InlineKeyboardMarkup:
 
     return add_bonus_keyboard
 
+def get_add_comment() -> InlineKeyboardMarkup:
+    frameinfo = getframeinfo(currentframe())
+    """
+    Диалог для указания комментария
+    :return: Клавиатура меню
+    """
+    print('keyboards.py->get_add_bonus', f'#{frameinfo.lineno}', 'Диалог для указания комментария')
+    add_comment_keyboard = InlineKeyboardMarkup()
+    pass_comment = InlineKeyboardButton('Пропустить', callback_data='pass_comment')
+    add_comment_keyboard.add(pass_comment)
+
+    return add_comment_keyboard
+
 def get_plus_minus_keyboard() -> InlineKeyboardMarkup:
     frameinfo = getframeinfo(currentframe())
     """
     Вывод клаиватуры выбора типа позиции
     :return: Клавиатура для выбора дохода или расхода
     """
-    print('keyboards.py->get_plus_minus_keyboard', f'#{frameinfo.lineno}', 'клаиватура при нажатии кнопки Добавить')
+    print('keyboards.py->get_plus_minus_keyboard', f'#{frameinfo.lineno}', 'Вывод клаиватуры выбора типа позиции')
     plus_minus_keyboard = InlineKeyboardMarkup(row_width=2)
     plus_button = InlineKeyboardButton("➕ Доход", callback_data='income')
     minus_button = InlineKeyboardButton("➖ Расход", callback_data='expense')
-    back = InlineKeyboardButton('⬅ Назад', callback_data='menu')
+    back = InlineKeyboardButton('⬅ Назад', callback_data='add_cat')
     plus_minus_keyboard.add(plus_button, minus_button, back)
 
     return plus_minus_keyboard

@@ -38,6 +38,7 @@ class Account(base):
     day = Column(Integer, nullable=False)
     month = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
+    comment = Column(String(100), nullable=False)
 
 
 class IncomeCategories(base):
