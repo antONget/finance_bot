@@ -6,7 +6,8 @@ import plot
 import qr
 import tableform
 from keyboards import *
-
+import os
+FILENAME = "/data/botdb.db" if "AMVERA" in os.environ else "botdb.db"
 # Тело телеграм бота
 
 API = '6561799727:AAH8G86QrKpsU97d_XVyvHCgyWUSH7xCN1Q'
