@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from itertools import tee
 from unicodedata import category
 from inspect import currentframe, getframeinfo
 
@@ -175,6 +176,39 @@ def get_categories_keyboard(position_type: str) -> InlineKeyboardMarkup:
         category = InlineKeyboardButton(str(categories[id][0]), callback_data=str(id))
         categories_keyboard.add(category)
 
+    return categories_keyboard
+
+def get_categories_keyboard_block(position_type: str, num_block: int) -> InlineKeyboardMarkup:
+    frameinfo = getframeinfo(currentframe())
+    """
+    Вывод клаиватуры выбора категории для внесения позиции поблочно
+    :return: Клавиатура с категориями
+    """
+    print('keyboards.py->get_categories_keyboard', f'#{frameinfo.lineno}', 'Вывод клаиватуры выбора категории для внесения позиции поблочно')
+    categories_keyboard = InlineKeyboardMarkup(row_width=1)
+    categories = module.get_categories(position_type)
+    num_cat_block = 6
+    count_block = len(categories) // num_cat_block
+    remains = len(categories) % num_cat_block
+
+    if num_block < 0:
+        num_block = 0
+    elif num_block >= count_block:
+        num_block = count_block
+
+    if num_block < count_block:
+        for id in range(num_block*num_cat_block, num_block*num_cat_block+num_cat_block):
+            category = InlineKeyboardButton(str(categories[id][0]), callback_data=str(id))
+            categories_keyboard.add(category)
+    elif remains:
+        for id in range(num_block*num_cat_block, len(categories)):
+            category = InlineKeyboardButton(str(categories[id][0]), callback_data=str(id))
+            categories_keyboard.add(category)
+    back_block = InlineKeyboardButton('<<<', callback_data='back_block')
+    next_block = InlineKeyboardButton('>>>', callback_data='next_block')
+    text_num = f'<{num_block}>'
+    dig_block = InlineKeyboardButton(f'<{num_block+1}>', callback_data='True')
+    categories_keyboard.row(back_block, dig_block, next_block)
     return categories_keyboard
 
 def get_delcategories_keyboard(position_type: str) -> InlineKeyboardMarkup:
